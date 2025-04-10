@@ -1,0 +1,146 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: none;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.main-content {
+    padding: 20px;
+}
+
+.chat-container {
+    height: 400px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    padding: 15px;
+}
+
+.message {
+    margin-bottom: 15px;
+    display: flex;
+}
+
+.message-content {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 15px;
+}
+
+.customer-message .message-content {
+    background-color: #e9ecef;
+    border-top-left-radius: 5px;
+}
+
+.ai-message {
+    justify-content: flex-end;
+}
+
+.ai-message .message-content {
+    background-color: #007bff;
+    color: white;
+    border-top-right-radius: 5px;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 5px;
+    text-align: right;
+}
+
+.feature-icon {
+    font-size: 2rem;
+    color: #007bff;
+    margin-bottom: 15px;
+}
+
+.sidebar {
+    background-color: #343a40;
+    color: white;
+    min-height: 100vh;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem 1rem;
+    margin: 0.2rem 0;
+    border-radius: 5px;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar .nav-link i {
+    margin-right: 10px;
+}
+
+.template-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    margin-bottom: 15px;
+}
+
+.stat-label {
+    display: block;
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+.monitoring-stats {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.verification-stats {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.chart-container {
+    height: 200px;
+    margin-top: 15px;
+}
+
+.template-item {
+    transition: all 0.3s ease;
+}
+
+.template-item:hover {
+    background-color: #f8f9fa;
+}

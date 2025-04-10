@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISP Management - Bandwidth Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            min-height: 100vh;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.5rem 1rem;
+            margin: 0.2rem 0;
+            border-radius: 5px;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Container -->
+            <div id="sidebarContainer" class="col-md-2 p-0"></div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <h2 class="mb-4">Bandwidth Management</h2>
+
+                <!-- Bandwidth Management Section -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Customer Bandwidth Management</h5>
+                        <button id="syncAllBandwidthBtn" class="btn btn-primary btn-sm">
+                            <i class="bi bi-arrow-repeat"></i> Sync All Limits
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="bandwidthCustomerSearch" class="form-control" placeholder="Search customers...">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">Status</span>
+                                    <select id="bandwidthStatusFilter" class="form-select">
+                                        <option value="all">All</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="suspended">Suspended</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Customer Name</th>
+                                        <th>PPPoE Username</th>
+                                        <th>Package</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bandwidthTableBody">
+                                    <!-- Table content will be dynamically populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bandwidth Limit Modal -->
+    <div class="modal fade" id="bandwidthModal" tabindex="-1" aria-labelledby="bandwidthModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bandwidthModalLabel">Bandwidth Limit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bandwidthForm">
+                        <div class="mb-3">
+                            <label for="downloadLimit" class="form-label">Download Limit (Mbps)</label>
+                            <input type="number" class="form-control" id="downloadLimit" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="uploadLimit" class="form-label">Upload Limit (Mbps)</label>
+                            <input type="number" class="form-control" id="uploadLimit" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Apply Limits</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QoS Profile Modal -->
+    <div class="modal fade" id="qosModal" tabindex="-1" aria-labelledby="qosModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="qosModalLabel">QoS Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="qosForm">
+                        <div class="mb-3">
+                            <label for="qosProfile" class="form-label">QoS Profile</label>
+                            <select class="form-select" id="qosProfile" required>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Apply QoS Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bandwidth Boost Modal -->
+    <div class="modal fade" id="boostModal" tabindex="-1" aria-labelledby="boostModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="boostModalLabel">Bandwidth Boost</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="boostForm">
+                        <div class="mb-3">
+                            <label for="downloadBoost" class="form-label">Additional Download (Mbps)</label>
+                            <input type="number" class="form-control" id="downloadBoost" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="uploadBoost" class="form-label">Additional Upload (Mbps)</label>
+                            <input type="number" class="form-control" id="uploadBoost" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="boostDuration" class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="boostDuration" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Apply Boost</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader" style="display: none;">
+        <div class="spinner-border text-light mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div id="loaderText">Loading...</div>
+    </div>
+
+    <!-- Bootstrap and other scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/layout.js"></script>
+    <script src="js/bandwidth.js"></script>
+    <script>
+        // Initialize the sidebar and bandwidth management
+        document.addEventListener('DOMContentLoaded', function() {
+            createSidebar();
+            initBandwidth();
+        });
+
+        // Show loader function
+        function showLoader(message = 'Loading...') {
+            document.getElementById('loaderText').textContent = message;
+            document.querySelector('.loader').style.display = 'flex';
+        }
+
+        // Hide loader function
+        function hideLoader() {
+            document.querySelector('.loader').style.display = 'none';
+        }
+
+        // Show toast notification
+        function showToast(type, message) {
+            // You can implement a toast notification system here
+            alert(message);
+        }
+    </script>
+</body>
+</html>

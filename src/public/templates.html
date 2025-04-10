@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Management - AI Bill</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <!-- Sidebar content will be injected by common.js -->
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Template Management</h1>
+                    <button class="btn btn-primary" onclick="showTemplateModal()">Add New Template</button>
+                </div>
+
+                <!-- Template Categories -->
+                <div class="row mb-4" id="templateCategories"></div>
+
+                <!-- Template List -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Key</th>
+                                <th>Title</th>
+                                <th>Variables</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="templateList"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal fade" id="templateModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Template</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="templateForm">
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <input type="text" class="form-control" id="category" required>
+                            <small class="text-muted">e.g., network, payment, support</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Key</label>
+                            <input type="text" class="form-control" id="key" required>
+                            <small class="text-muted">Unique identifier for this template</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Content</label>
+                            <textarea class="form-control" id="content" rows="5" required></textarea>
+                            <small class="text-muted">Use {{variableName}} for dynamic content</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Variables (comma-separated)</label>
+                            <input type="text" class="form-control" id="variables">
+                            <small class="text-muted">e.g., customerName, ticketNumber, amount</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/template-guide.js"></script>
+    <script>
+        let templateModal;
+        let templates = {};
+        let currentTemplate = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            templateModal = new bootstrap.Modal(document.getElementById('templateModal'));
+            loadTemplates();
+        });
+
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/api/settings/templates');
+                templates = await response.json();
+                displayTemplates();
+                displayCategories();
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                showError('Failed to load templates');
+            }
+        }
+
+        function displayCategories() {
+            const container = document.getElementById('templateCategories');
+            container.innerHTML = '';
+            
+            const categories = Object.keys(templates);
+            categories.forEach(category => {
+                const count = Object.keys(templates[category] || {}).length;
+                container.innerHTML += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">${category}</h5>
+                                <p class="card-text">${count} templates</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function displayTemplates() {
+            const tbody = document.getElementById('templateList');
+            tbody.innerHTML = '';
+
+            Object.entries(templates).forEach(([category, categoryTemplates]) => {
+                Object.entries(categoryTemplates).forEach(([key, template]) => {
+                    const variables = template.variables ? template.variables.join(', ') : '';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${category}</td>
+                            <td>${key}</td>
+                            <td>${template.title}</td>
+                            <td>${variables}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info me-2" onclick='editTemplate(${JSON.stringify({category, key})})'>Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick='deleteTemplate(${JSON.stringify({category, key})})'>Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function showTemplateModal(template = null) {
+            currentTemplate = template;
+            const form = document.getElementById('templateForm');
+            
+            if (template) {
+                document.getElementById('category').value = template.category;
+                document.getElementById('key').value = template.key;
+                document.getElementById('title').value = templates[template.category][template.key].title;
+                document.getElementById('content').value = templates[template.category][template.key].content;
+                document.getElementById('variables').value = templates[template.category][template.key].variables?.join(', ') || '';
+            } else {
+                form.reset();
+            }
+
+            templateModal.show();
+        }
+
+        function editTemplate(template) {
+            showTemplateModal(template);
+        }
+
+        async function saveTemplate() {
+            const category = document.getElementById('category').value.trim();
+            const key = document.getElementById('key').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const variables = document.getElementById('variables').value
+                .split(',').map(v => v.trim()).filter(v => v);
+
+            if (!category || !key || !title || !content) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/settings/templates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category, key, title, content, variables })
+                });
+
+                if (!response.ok) throw new Error('Failed to save template');
+
+                await loadTemplates();
+                templateModal.hide();
+                showSuccess('Template saved successfully');
+            } catch (error) {
+                console.error('Error saving template:', error);
+                showError('Failed to save template');
+            }
+        }
+
+        async function deleteTemplate(template) {
+            try {
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'This template will be permanently deleted',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                });
+
+                if (result.isConfirmed) {
+                    const response = await fetch(`/api/settings/templates/${template.category}/${template.key}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) throw new Error('Failed to delete template');
+
+                    await loadTemplates();
+                    showSuccess('Template deleted successfully');
+                }
+            } catch (error) {
+                console.error('Error deleting template:', error);
+                showError('Failed to delete template');
+            }
+        }
+
+        function showSuccess(message) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: message,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        function showError(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: message
+            });
+        }
+    </script>
+</body>
+</html>
