@@ -57,8 +57,8 @@ npm run dev
 
 - Node.js and Express for backend services
 - React for frontend interfaces
-- MongoDB for database storage
+- postgresql for database storage
 - WhatsApp Business API for customer communication
 - Mikrotik API for router integration
-- OpenAI API for AI capabilities
+- ollama API for AI capabilities
 - Socket.io for real-time communication
